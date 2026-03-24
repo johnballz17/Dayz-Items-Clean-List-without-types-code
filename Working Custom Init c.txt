@@ -1,0 +1,120 @@
+void main()
+{
+    // INIT ECONOMY --------------------------------------
+    Hive ce = CreateHive();
+    if (ce)
+        ce.InitOffline();
+
+    // TEST SPAWN ----------------------------------------
+    Object locker = GetGame().CreateObject("vbldr_locker_closed_v1", "1397.919 22.390 626.338");
+    if (locker)
+    {
+        locker.SetPosition("1397.919 22.390 626.338");
+        locker.SetOrientation("0 0 0");
+    }
+
+    // DATE RESET AFTER ECONOMY INIT ----------------------
+    int year, month, day, hour, minute;
+    int reset_month = 9, reset_day = 20;
+    GetGame().GetWorld().GetDate(year, month, day, hour, minute);
+
+    if ((month == reset_month) && (day < reset_day))
+    {
+        GetGame().GetWorld().SetDate(year, reset_month, reset_day, hour, minute);
+    }
+    else
+    {
+        if ((month == reset_month + 1) && (day > reset_day))
+        {
+            GetGame().GetWorld().SetDate(year, reset_month, reset_day, hour, minute);
+        }
+        else
+        {
+            if ((month < reset_month) || (month > reset_month + 1))
+            {
+                GetGame().GetWorld().SetDate(year, reset_month, reset_day, hour, minute);
+            }
+        }
+    }
+}
+
+class CustomMission: MissionServer
+{
+    void SetRandomHealth(EntityAI itemEnt)
+    {
+        if (itemEnt)
+        {
+            float rndHlt = Math.RandomFloat(0.45, 0.65);
+            itemEnt.SetHealth01("", "", rndHlt);
+        }
+    }
+
+    override PlayerBase CreateCharacter(PlayerIdentity identity, vector pos, ParamsReadContext ctx, string characterName)
+    {
+        Entity playerEnt;
+        playerEnt = GetGame().CreatePlayer(identity, characterName, pos, 0, "NONE");
+        Class.CastTo(m_player, playerEnt);
+
+        GetGame().SelectPlayer(identity, m_player);
+
+        return m_player;
+    }
+
+    override void StartingEquipSetup(PlayerBase player, bool clothesChosen)
+    {
+        player.RemoveAllItems();
+
+        EntityAI itemEnt;
+        Weapon_Base weapon;
+        Magazine mag;
+
+        // Worn clothing
+        player.GetInventory().CreateAttachment("BeanieHat_Black");
+        player.GetInventory().CreateAttachment("BalaclavaMask_Black");
+        player.GetInventory().CreateAttachment("M65Jacket_Black");
+        player.GetInventory().CreateAttachment("SlingBag_Black");
+        player.GetInventory().CreateAttachment("WoolGlovesFingerless_Black");
+        player.GetInventory().CreateAttachment("CargoPants_Black");
+        player.GetInventory().CreateAttachment("CombatBoots_Black");
+
+        // Pistol
+        weapon = Weapon_Base.Cast(player.GetInventory().CreateInInventory("SN_M9"));
+        if (weapon)
+        {
+            player.SetQuickBarEntityShortcut(weapon, 0);
+        }
+
+        // Magazine
+        mag = Magazine.Cast(player.GetInventory().CreateInInventory("SN_M9_Mag"));
+        if (mag)
+        {
+            player.SetQuickBarEntityShortcut(mag, 1);
+        }
+
+        // Medical
+        itemEnt = player.GetInventory().CreateInInventory("BM_Medicines_Bandage");
+        if (itemEnt)
+        {
+            player.SetQuickBarEntityShortcut(itemEnt, 2);
+        }
+
+        // Food
+        itemEnt = player.GetInventory().CreateInInventory("MassHeli_MRE10");
+        if (itemEnt)
+        {
+            player.SetQuickBarEntityShortcut(itemEnt, 3);
+        }
+
+        // Drink
+        itemEnt = player.GetInventory().CreateInInventory("SodaCan_Pipsi");
+        if (itemEnt)
+        {
+            player.SetQuickBarEntityShortcut(itemEnt, 4);
+        }
+    }
+};
+
+Mission CreateCustomMission(string path)
+{
+    return new CustomMission();
+}
